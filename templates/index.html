@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz AI - Evaluare Documente</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>📄 Generator Quiz cu AI</h1>
+        <p>Încarcă un document (PDF, DOCX, TXT) și primește o evaluare completă</p>
+        
+        <div class="upload-section">
+            <input type="file" id="fileInput" accept=".pdf,.docx,.txt">
+            <button onclick="uploadDocument()" id="uploadBtn">Încarcă document</button>
+            <div id="loading" class="hidden">⏳ Se procesează...</div>
+        </div>
+        
+        <div id="quizSection" class="hidden">
+            <h2>Quiz generat pe baza documentului</h2>
+            <div id="questions"></div>
+            <button onclick="submitAnswers()" id="submitBtn">Vezi rezultatele</button>
+        </div>
+        
+        <div id="resultsSection" class="hidden">
+            <h2>Rezultatele tale</h2>
+            <div class="results-grid">
+                <div class="result-card">
+                    <h3>Scor</h3>
+                    <div id="score" class="value">0%</div>
+                </div>
+                <div class="result-card">
+                    <h3>Nivel</h3>
+                    <div id="level" class="value">-</div>
+                    <div id="confidence" class="small"></div>
+                </div>
+                <div class="result-card">
+                    <h3>Șanse de promovare</h3>
+                    <div id="chances" class="value">0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/script.js"></script>
+</body>
+</html>
