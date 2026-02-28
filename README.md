@@ -3,6 +3,11 @@
 > A web application that automatically generates quizzes from PDF/DOCX documents using NLP and evaluates the user with TensorFlow models.
 
 ---
+## Demo
+
+
+https://github.com/user-attachments/assets/7e8c5191-5c78-4aa2-aa97-6f67b548f553
+
 
 ## Application Architecture
 
@@ -101,7 +106,11 @@ quiz_app/
 | **Flask-CORS** | Cross-Origin Resource Sharing |
 | **PyPDF2** |  Text extraction from PDF files |
 | **python-docx** |  Text extraction from Word files (.docx) |
-| **TensorFlow** |ML models for classification & prediction |
+| **TensorFlow** |ML models for classification & pre
+
+https://github.com/user-attachments/assets/98815902-50ce-42fc-9a6f-9c12690a7938
+
+diction |
 | **NumPy** |  Numerical processing & feature engineering |
 | **SQLite** | Local database for quizzes and results |
 
