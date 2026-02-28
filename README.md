@@ -112,7 +112,6 @@ quiz_app/
 | **python-docx** |  Text extraction from Word files (.docx) |
 | **TensorFlow** |ML models for classification & pre
 
-https://github.com/user-attachments/assets/98815902-50ce-42fc-9a6f-9c12690a7938
 
 diction |
 | **NumPy** |  Numerical processing & feature engineering |
