@@ -6,7 +6,11 @@
 ## Demo
 
 
-https://github.com/user-attachments/assets/7e8c5191-5c78-4aa2-aa97-6f67b548f553
+
+
+https://github.com/user-attachments/assets/f317bfde-c1ff-4cc9-9d3f-2d26932c6fef
+
+
 
 
 ## Application Architecture
