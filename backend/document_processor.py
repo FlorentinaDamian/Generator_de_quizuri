@@ -1,10 +1,7 @@
 import os
 
 def extract_text(filepath: str) -> str:
-    """
-    Extract plain text from PDF or DOCX files.
-    Uses PyPDF2 for PDFs and python-docx for Word documents.
-    """
+
     ext = os.path.splitext(filepath)[1].lower()
 
     if ext == ".pdf":

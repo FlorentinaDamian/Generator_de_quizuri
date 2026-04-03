@@ -1,12 +1,3 @@
-"""
-TensorFlow Models
-─────────────────
-Model 1 – Level Classifier  : Beginner / Intermediate / Advanced
-Model 2 – Chance Predictor  : 0–100 % success probability
-
-Both models are trained on-the-fly with synthetic data if no saved weights exist.
-Replace synthetic data + retrain with your real dataset for production use.
-"""
 
 import numpy as np
 import os
@@ -17,20 +8,7 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 
 LEVEL_LABELS = ["Beginner", "Intermediate", "Advanced"]
 
-
-# ─── Feature engineering ──────────────────────────────────────────────────────
-
 def _answers_to_features(answers: List[Dict]) -> np.ndarray:
-    """
-    Convert a list of answer objects to a fixed-size feature vector.
-
-    Features:
-        [0] score_ratio          – correct / total
-        [1] total_questions
-        [2] avg_answer_index     – avg position of selected option (0-3)
-        [3] first_answer_correct – 1 if first question answered correctly
-        [4] last_answer_correct  – 1 if last question answered correctly
-    """
     total = len(answers)
     if total == 0:
         return np.zeros((1, 5), dtype=np.float32)
@@ -42,10 +20,6 @@ def _answers_to_features(answers: List[Dict]) -> np.ndarray:
     last_ok  = 1.0 if answers[-1].get("selected") == answers[-1].get("correct") else 0.0
 
     return np.array([[score_ratio, total, avg_idx, first_ok, last_ok]], dtype=np.float32)
-
-
-# ─── Model builders ───────────────────────────────────────────────────────────
-
 def _build_level_model():
     import tensorflow as tf
     model = tf.keras.Sequential([
@@ -70,9 +44,6 @@ def _build_chances_model():
     model.compile(optimizer="adam", loss="mse")
     return model
 
-
-# ─── Synthetic training data (replace with real data) ─────────────────────────
-
 def _synthetic_data(n=500):
     np.random.seed(42)
     scores = np.random.uniform(0, 1, n)
@@ -82,17 +53,10 @@ def _synthetic_data(n=500):
     last_ok  = (np.random.rand(n) > 0.4).astype(float)
 
     X = np.stack([scores, totals, avg_idx, first_ok, last_ok], axis=1).astype(np.float32)
-
-    # Level: 0=Beginner (<0.4), 1=Intermediate (0.4-0.7), 2=Advanced (>0.7)
     y_level = np.where(scores < 0.4, 0, np.where(scores < 0.7, 1, 2)).astype(np.int32)
-
-    # Chances: correlated with score + noise
     y_chances = np.clip(scores + np.random.normal(0, 0.1, n), 0, 1).astype(np.float32)
 
     return X, y_level, y_chances
-
-
-# ─── Load or train models ─────────────────────────────────────────────────────
 
 _level_model = None
 _chances_model = None
@@ -125,14 +89,8 @@ def _get_models():
 
     return _level_model, _chances_model
 
-
-# ─── Public API ───────────────────────────────────────────────────────────────
-
 def predict_level_and_chances(answers: List[Dict]) -> Dict:
-    """
-    Run both models and return:
-        { "level": str, "chances_percent": float }
-    """
+
     features = _answers_to_features(answers)
     level_model, chances_model = _get_models()
 
