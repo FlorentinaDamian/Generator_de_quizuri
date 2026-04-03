@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Generator AI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4ff; color: #1e1e2e; min-height: 100vh; }
+    header { background: linear-gradient(135deg, #6c63ff, #48bfe3); color: white; padding: 1.5rem 2rem; text-align: center; }
+    header h1 { font-size: 1.8rem; }
+    header p { opacity: 0.85; margin-top: .3rem; }
+    main { max-width: 780px; margin: 2rem auto; padding: 0 1rem; }
+    .card { background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 1.5rem; }
+    h2 { margin-bottom: 1rem; color: #6c63ff; }
+    #drop-zone { border: 2px dashed #6c63ff; border-radius: 12px; padding: 2.5rem; text-align: center; cursor: pointer; transition: background .2s; }
+    #drop-zone:hover { background: #f0eeff; }
+    #drop-zone input[type=file] { display: none; }
+    #drop-zone .icon { font-size: 3rem; }
+    #drop-zone p { color: #666; margin-top: .5rem; }
+    #file-name { margin-top: .8rem; color: #6c63ff; font-weight: 600; }
+    button { background: #6c63ff; color: white; border: none; padding: .75rem 1.8rem; border-radius: 8px; cursor: pointer; font-size: 1rem; margin-top: 1rem; transition: background .2s; }
+    button:hover { background: #574fd6; }
+    button:disabled { background: #aaa; cursor: default; }
+    .progress-bar { height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden; margin-top: 1rem; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #6c63ff, #48bfe3); width: 0%; transition: width .4s ease; }
+    .question-block { margin-bottom: 1.5rem; padding: 1rem; border-radius: 8px; border: 2px solid transparent; }
+    .question-block h3 { font-size: 1rem; margin-bottom: .6rem; }
+    .option label { display: flex; align-items: center; gap: .6rem; padding: .6rem .8rem; border-radius: 8px; cursor: pointer; transition: background .15s; }
+    .option label:hover { background: #f0eeff; }
+    .option input[type=radio] { accent-color: #6c63ff; }
+    .result-row { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1rem; }
+    .result-box { flex: 1; min-width: 150px; background: linear-gradient(135deg, #6c63ff20, #48bfe320); border: 1.5px solid #6c63ff44; border-radius: 12px; padding: 1.5rem; text-align: center; }
+    .result-box .label { font-size: .8rem; color: #666; text-transform: uppercase; letter-spacing: .05em; }
+    .result-box .value { font-size: 2rem; font-weight: 700; color: #6c63ff; margin-top: .3rem; }
+    .stepper { display: flex; justify-content: center; gap: .5rem; margin-bottom: 2rem; }
+    .step { width: 32px; height: 32px; border-radius: 50%; background: #ddd; color: #888; display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 700; transition: background .3s; }
+    .step.active { background: #6c63ff; color: white; }
+    .step.done { background: #48bfe3; color: white; }
+    .status-msg { color: #e55; font-size: .9rem; margin-top: .5rem; min-height: 1.2rem; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>🎓 Quiz Generator AI</h1>
+  <p>Încarcă un document → Primești quiz generat automat → Vezi nivelul tău</p>
+</header>
+<main>
+  <div class="stepper">
+    <div class="step active" id="s1">1</div>
+    <div class="step" id="s2">2</div>
+    <div class="step" id="s3">3</div>
+  </div>
+  <div class="card" id="upload-card">
+    <h2>📄 Pas 1 – Încarcă documentul</h2>
+    <div id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <div class="icon">☁️</div>
+      <p>Trage fișierul aici sau click pentru a selecta</p>
+      <p style="font-size:.8rem;margin-top:.3rem">.pdf sau .docx</p>
+      <input type="file" id="file-input" accept=".pdf,.docx" onchange="onFileSelect(this)" />
+    </div>
+    <div id="file-name"></div>
+    <div class="status-msg" id="status"></div>
+    <div class="progress-bar" id="upload-progress" style="display:none">
+      <div class="progress-fill" id="upload-fill"></div>
+    </div>
+    <button id="upload-btn" disabled onclick="uploadDocument()">Generează Quiz</button>
+  </div>
+  <div class="card" id="quiz-card" style="display:none">
+    <h2>✏️ Pas 2 – Completează quiz-ul</h2>
+    <div id="questions-container"></div>
+    <div class="status-msg" id="quiz-status"></div>
+    <button id="submit-btn" onclick="submitAnswers()">Trimite răspunsurile</button>
+  </div>
+  <div class="card" id="results-card" style="display:none">
+    <h2>🏆 Pas 3 – Rezultatele tale</h2>
+    <div class="result-row">
+      <div class="result-box">
+        <div class="label">Nivel</div>
+        <div class="value" id="res-level">—</div>
+      </div>
+      <div class="result-box">
+        <div class="label">Șanse succes</div>
+        <div class="value" id="res-chances">—</div>
+      </div>
+    </div>
+    <button onclick="location.reload()" style="margin-top:1.5rem;background:#48bfe3">🔄 Quiz nou</button>
+  </div>
+</main>
+<script>
+  const API = "http://localhost:5000";
+  let currentQuizId = null;
+  let currentQuestions = [];
+  let selectedFile = null;
+  function show(id)  { document.getElementById(id).style.display = "block"; }
+  function hide(id)  { document.getElementById(id).style.display = "none"; }
+  function setStatus(id, msg) { document.getElementById(id).textContent = msg; }
+  const zone = document.getElementById("drop-zone");
+  zone.addEventListener("dragover", e => { e.preventDefault(); zone.style.background = "#f0eeff"; });
+  zone.addEventListener("dragleave", () => zone.style.background = "");
+  zone.addEventListener("drop", e => {
+    e.preventDefault();
+    zone.style.background = "";
+    if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+  });
+  function onFileSelect(input) {
+    if (input.files[0]) setFile(input.files[0]);
+  }
+  function setFile(f) {
+    selectedFile = f;
+    document.getElementById("file-name").textContent = "✅ " + f.name;
+    document.getElementById("upload-btn").disabled = false;
+    setStatus("status", "");
+  }
+  async function uploadDocument() {
+    if (!selectedFile) return;
+    const btn = document.getElementById("upload-btn");
+    btn.disabled = true;
+    setStatus("status", "");
+    const fill = document.getElementById("upload-fill");
+    show("upload-progress");
+    fill.style.width = "30%";
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+    try {
+      const resp = await fetch(API + "/upload", { method: "POST", body: formData });
+      fill.style.width = "70%";
+      if (!resp.ok) {
+        const err = await resp.json();
+        throw new Error(err.error || "Upload eșuat");
+      }
+      const data = await resp.json();
+      fill.style.width = "100%";
+      currentQuizId = data.quiz_id;
+      currentQuestions = data.questions;
+      setTimeout(showQuiz, 400);
+    } catch (err) {
+      setStatus("status", "❌ " + err.message);
+      btn.disabled = false;
+      fill.style.width = "0%";
+    }
+  }
+  function showQuiz() {
+    hide("upload-card");
+    show("quiz-card");
+    stepTo(2);
+    const container = document.getElementById("questions-container");
+    container.innerHTML = "";
+    currentQuestions.forEach((q, qi) => {
+      const block = document.createElement("div");
+      block.className = "question-block";
+      block.dataset.qid = q.id;
+      let html = "<h3>" + (qi + 1) + ". " + q.question + "</h3>";
+      q.options.forEach((opt, oi) => {
+        html += '<div class="option"><label><input type="radio" name="q' + q.id + '" value="' + opt + '" data-index="' + oi + '" /> ' + opt + '</label></div>';
+      });
+      block.innerHTML = html;
+      container.appendChild(block);
+    });
+  }
+  async function submitAnswers() {
+    const answers = [];
+    const unanswered = [];
+    currentQuestions.forEach(q => {
+      const sel = document.querySelector('input[name="q' + q.id + '"]:checked');
+      if (!sel) { unanswered.push(q.id); return; }
+      answers.push({
+        question_id: q.id,
+        selected: sel.value,
+        correct: q.correct_answer,
+        selected_index: parseInt(sel.dataset.index)
+      });
+    });
+    document.querySelectorAll(".question-block").forEach(b => b.style.border = "2px solid transparent");
+    if (unanswered.length > 0) {
+      unanswered.forEach(qid => {
+        const b = document.querySelector('.question-block[data-qid="' + qid + '"]');
+        if (b) b.style.border = "2px solid #e55";
+      });
+      setStatus("quiz-status", "❌ Răspunde la toate întrebările marcate cu roșu (" + unanswered.length + " rămase)");
+      return;
+    }
+    const btn = document.getElementById("submit-btn");
+    btn.disabled = true;
+    btn.textContent = "⏳ Se procesează...";
+    setStatus("quiz-status", "");
+    try {
+      const resp = await fetch(API + "/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quiz_id: currentQuizId, answers: answers })
+      });
+      if (!resp.ok) throw new Error("Server error " + resp.status);
+      const data = await resp.json();
+      showResults(data);
+    } catch (err) {
+      setStatus("quiz-status", "❌ Eroare: " + err.message);
+      btn.disabled = false;
+      btn.textContent = "Trimite răspunsurile";
+    }
+  }
+  function showResults(data) {
+    hide("quiz-card");
+    show("results-card");
+    stepTo(3);
+    document.getElementById("res-level").textContent = data.level || "N/A";
+    document.getElementById("res-chances").textContent = (data.chances_percent != null ? data.chances_percent : "?") + "%";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function stepTo(n) {
+    [1, 2, 3].forEach(i => {
+      const el = document.getElementById("s" + i);
+      el.className = "step" + (i < n ? " done" : i === n ? " active" : "");
+    });
+  }
+</script>
+</body>
+</html>
