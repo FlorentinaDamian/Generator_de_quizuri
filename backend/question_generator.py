@@ -1,6 +1,11 @@
 import re
 import random
 from typing import List, Dict
+
+# ── Optional: use a Hugging Face pipeline for better question generation ──────
+# from transformers import pipeline
+# qg_pipeline = pipeline("text2text-generation", model="valhalla/t5-base-qg-hl")
+
 def generate_questions(text: str, num_questions: int = 5) -> List[Dict]:
     """
     Generate multiple-choice questions from extracted document text.
@@ -29,11 +34,15 @@ def generate_questions(text: str, num_questions: int = 5) -> List[Dict]:
         words = sentence.split()
         if len(words) < 6:
             continue
+
+        # Pick a "key word" to blank out (simple heuristic: longest word)
         key_word = max(words, key=len)
         if len(key_word) < 4:
             continue
 
         question_text = sentence.replace(key_word, "________", 1)
+
+        # Correct answer
         correct = key_word
 
         # Distractors: longest words from 3 other random sentences
